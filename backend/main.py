@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -6,15 +6,22 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.api.v1 import router
 from app.api.v1.routes.auth import limiter
+from app.core.config import cfg
 
-app = FastAPI(title="Finance Tracker API", version="1.0.0", description="Production-quality personal finance tracking system")
+app = FastAPI(
+    title="Finance Tracker API",
+    version="1.0.0",
+    description="Production-quality personal finance tracking system",
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+origins = [o.strip() for o in cfg.ALLOWED_ORIGINS.split(",")] if cfg.ALLOWED_ORIGINS != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
